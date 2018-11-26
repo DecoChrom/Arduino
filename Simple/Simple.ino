@@ -1,14 +1,14 @@
 /*
-  Switches the polarity on two pins with timers. 
+  Switches the polarity on two pins. 
 
   On and off times can be adjusted by changing the corresponding
   variables. 
 
-  This code uses timers that allow for other time sensitive code to
-  run.
+  This code uses Arduino's delay function for on and off times and
+  should therefore not be used with time sensitive code.
 
   by Walther Jensen
-  https://github.com/DecoChrom/Arduino/Advanced
+  https://github.com/DecoChrom/Arduino/Simple
 */
 
 #include <Arduino.h>
@@ -27,10 +27,6 @@ int offInterval = 5000;
 bool side = true;
 float voltage = 3.0;
 
-// Don't change
-long lastChange = 0;
-bool powerIsOn = false;
-
 void setup()
 {
   pinMode(displayPin0, OUTPUT);
@@ -40,51 +36,35 @@ void setup()
   Serial.println("Device booted.");
 }
 
+
 void loop()
 {
-  long now = millis();
+  Serial.print("Powering on. ");
+  Serial.println((side ? "One side." : "Other side"));
 
-  if (powerIsOn)
-  {
-    if (now - lastChange >= onInterval)
-    {
-      lastChange = now;
-      Serial.println("Powering off.");
+  setDisplayPower(side, voltage);
+  
+  // We flip side to flip the polarity.
+  side = !side;
+  delay(onInterval);
 
-      setDisplayPower(side, 0);
-      powerIsOn = false;
-    }
-  }
-  else
-  {
-    if (now - lastChange >= offInterval)
-    {
-      lastChange = now;
-      Serial.print("Powering on. ");
-      Serial.println((side ? "One side." : "Other side"));
+  Serial.println("Powering off.");
 
-      setDisplayPower(side, voltage);
+  setDisplayPower(side, 0);
+  delay(offInterval);
 
-      // We flip side to flip the polarity.
-      side = !side;
-      powerIsOn = true;
-    }
-  }
 }
 
-void setDisplayPower(bool polarity, float voltage)
-{
+void setDisplayPower(bool polarity, float voltage){
   // Convert voltage to 255 range
   int v = (voltage / 5.0) * 255;
-
-  if (polarity)
-  {
+  
+  if (polarity){
     analogWrite(displayPin0, v);
     analogWrite(displayPin1, 0);
-  }
-  else
-  {
+  } else {
     analogWrite(displayPin0, 0);
     analogWrite(displayPin1, v);
   }
+
 }
